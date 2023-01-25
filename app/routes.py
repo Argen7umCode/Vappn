@@ -15,4 +15,10 @@ def register():
 
 @app.route('/vappn/get_config', methods=['GET'])
 def get_config():
+    """
+        user_id - id пользователя, который является владельцем конфигурации
+        config - текст файла конфигураци    
+    """
     params = request.json
+
+    
