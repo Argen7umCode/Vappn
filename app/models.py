@@ -12,7 +12,7 @@ class User(db.Model):
     #     self.telegram_id = kwargs.get('telegram_id')
         
     def __repl__(self):
-        return f'{self.username} {self.unique_user_id   }'
+        return f'{self.username} {self.unique_user_id}'
 
 
 class VPN_config(db.Model):

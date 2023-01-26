@@ -1,6 +1,8 @@
 import paramiko
 import re
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 class ManagerVPN(paramiko.SSHClient):
 
@@ -37,7 +39,8 @@ class ManagerVPN(paramiko.SSHClient):
 
     def add_client(self, name):
         _, stdout, _ = self.exec_command(f'pivpn -a -n {name}')
-        if re.search(r'::: A client with this name already exists',  stdout.read().decode('utf8')):
+        stdout = str(stdout.read().decode('utf8'))
+        if re.search(r'::: A client with this name already exists',  stdout):
             print('A client with this name already exists')
             return False
         else:
@@ -45,7 +48,7 @@ class ManagerVPN(paramiko.SSHClient):
 
     def get_config(self, name):
         _, stdout, _ = self.exec_command(f'cat /home/user/configs/{name}.conf')
-        stdout = stdout.read().decode('utf8')
+        stdout = str(stdout.read().decode('utf8'))
         if re.search(r'No such file or directory', stdout):
             print('A client with this name already exists')
             return None
@@ -53,15 +56,23 @@ class ManagerVPN(paramiko.SSHClient):
             return stdout
 
     def register_new_client_and_get_config(self, name):
+        print(f'Registering {name}')
         if self.add_client(name):
+            print(f'Succses register {name}')
             return self.get_config(name)
         else: 
             return None
 
     def remove_client(self, name):
+        print(f'Removing {name}')
         _, stdout, _ = self.exec_command(f'pivpn -r {name} -y')
-        stdout = stdout.read().decode('utf8')
+        # stdout = str(stdout.read().decode('utf8'))
 
     def turn_off_or_client(self, name, on_off='on'):
-        _, stdout, _ = self.exec_command(f'pivpn -{on_off} {name} -y')
+        self.exec_command(f'pivpn -{on_off} {name} -y')
 
+# m = ManagerVPN(os.getenv('SERVER_IP'),
+#                os.getenv('SERVER_USER'),
+#                os.getenv('SERVER_PASSWORD'))
+
+# m.get_clients_list()
