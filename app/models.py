@@ -18,6 +18,7 @@ class User(db.Model):
 class VPN_config(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    client_name = db.Column(db.String(250), unique=True)
     config = db.Column(db.Text)
 
     # def __init__(self, **kwargs) -> None:
