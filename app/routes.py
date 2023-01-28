@@ -33,7 +33,8 @@ def register_config():
     params = request.json
     manager.create_connection()
     client_name = params.get('client_name')
-    user_name_line = User.query.filter(User.unique_user_id == params.get('unique_user_id')).first()
+    unique_user_id = params.get('unique_user_id')
+    user_name_line = User.query.filter(User.unique_user_id == unique_user_id).first()
 
     # Делается запрос в базу данных, если пользователь существует, то выполняется тело условия
     if user_name_line is not None:
@@ -45,7 +46,7 @@ def register_config():
         # Если клиент есть, то выполняется запрос на сохраниение конфига в базе данных,
         # иначе возвращается ошибка 
         if response is not None and response != {}:
-            db.session.add(VPN_config(user_id=user_name,
+            db.session.add(VPN_config(user_id=unique_user_id,
                                      client_name=client_name, 
                                      config=response))
             db.session.commit()
@@ -73,7 +74,6 @@ def delete_config():
     client_name_line = VPN_config.query.filter(VPN_config.client_name == client_name)
     was_removed = manager.remove_client(client_name)
     if client_name_line.first() is not None and was_removed:
-        # print(client_name_line.all())
         client_name_line.delete()
         db.session.commit()
         response = 'Success removed'  
@@ -86,3 +86,31 @@ def delete_config():
         'client_name' : client_name, 
         'config' : response
     }
+
+def create_json_response_user_id_client_config(user_id, data):
+    return {
+        user_id : [{
+            'client_name' : line.client_name,
+            'config' : line.config
+        } for line in data] 
+    }
+
+@app.route('/vappn/get_client_configs', methods=['GET'])
+def get_config():
+    '''
+        user_id - уникальный идентификационный номер пользователя 
+    '''
+    params = request.json
+    user_id = params.get('user_id')
+
+    user_name_line = User.query.filter(User.unique_user_id == user_id).all()
+    print(user_name_line)
+    if user_name_line != []:
+        data = VPN_config.query.filter(VPN_config.user_id == user_id).all()
+        response = create_json_response_user_id_client_config(user_id, data)
+    else:
+        response = {
+            user_id : 'User not found'
+        }
+
+    return response
