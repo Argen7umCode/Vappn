@@ -19,6 +19,10 @@ def register():
         return jsonify({'Response' : 'User already exists'})
     else:
         return jsonify({'Response' : 'Succsess'})
+    
+
+def get_query_in_table_by_line_and_value(table, line, value):
+    return table.query.filter(line == value)
 
 
 @app.route('/vappn/create_client_config', methods=['POST'])
@@ -34,27 +38,36 @@ def register_config():
     manager.create_connection()
     client_name = params.get('client_name')
     unique_user_id = params.get('unique_user_id')
-    user_name_line = User.query.filter(User.unique_user_id == unique_user_id).first()
+
+    user_line = get_query_in_table_by_line_and_value(
+                                                    User, 
+                                                    User.unique_user_id, 
+                                                    unique_user_id
+                                                ).first()
 
     # Делается запрос в базу данных, если пользователь существует, то выполняется тело условия
-    if user_name_line is not None:
-        user_name = user_name_line.username
-        
-        # Делается запрос на сервер с VPN создается конфига
-        response = manager.register_new_client_and_get_config(client_name)
-        
-        # Если клиент есть, то выполняется запрос на сохраниение конфига в базе данных,
-        # иначе возвращается ошибка 
-        if response is not None and response != {}:
-            db.session.add(VPN_config(user_id=unique_user_id,
-                                     client_name=client_name, 
-                                     config=response))
-            db.session.commit()
+    if get_query_in_table_by_line_and_value(VPN_config,
+                                            VPN_config.client_name, 
+                                            client_name).all() != []:
+        if user_line is not None:
+            
+            # Делается запрос на сервер с VPN создается конфига
+            response = manager.register_new_client_and_get_config(client_name)
+            
+            # Если клиент есть, то выполняется запрос на сохраниение конфига в базе данных,
+            # иначе возвращается ошибка 
+            if response is not None and response != {}:
+                db.session.add(VPN_config(user_id=unique_user_id,
+                                        client_name=client_name, 
+                                        config=response))
+                db.session.commit()
+            else: 
+                response = 'Username error'
         else: 
-            response = 'Username error'
-    else: 
-        response = 'User not found'
-    
+            response = 'User not found'
+    else:
+        response = 'Client name already exists'
+        
     manager.close()
     return {
         'client_name' : client_name, 
