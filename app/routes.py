@@ -2,7 +2,7 @@ from app import app, db, manager
 from app.models import User, VPN_config
 from flask import request, jsonify
 from sqlalchemy.exc import IntegrityError
-
+from pprint import pprint as print
 
 @app.route('/vappn/register', methods=['POST'])
 def register():
@@ -45,18 +45,18 @@ def register_config():
                                                     unique_user_id
                                                 ).first()
 
+
     # Делается запрос в базу данных, если пользователь существует, то выполняется тело условия
     if get_query_in_table_by_line_and_value(VPN_config,
                                             VPN_config.client_name, 
-                                            client_name).all() != []:
-        if user_line is not None:
-            
+                                            client_name).all() == []:
+        if user_line is not None or user_line != "":
             # Делается запрос на сервер с VPN создается конфига
             response = manager.register_new_client_and_get_config(client_name)
-            
+            print(response)
             # Если клиент есть, то выполняется запрос на сохраниение конфига в базе данных,
             # иначе возвращается ошибка 
-            if response is not None and response != {}:
+            if response is not None and response != '':
                 db.session.add(VPN_config(user_id=unique_user_id,
                                         client_name=client_name, 
                                         config=response))
@@ -84,7 +84,9 @@ def delete_config():
     manager.create_connection()
     client_name = params.get('client_name')
 
-    client_name_line = VPN_config.query.filter(VPN_config.client_name == client_name)
+    client_name_line = get_query_in_table_by_line_and_value(VPN_config, 
+                                                            VPN_config.client_name, 
+                                                            client_name)
     was_removed = manager.remove_client(client_name)
     if client_name_line.first() is not None and was_removed:
         client_name_line.delete()
@@ -116,10 +118,14 @@ def get_config():
     params = request.json
     user_id = params.get('user_id')
 
-    user_name_line = User.query.filter(User.unique_user_id == user_id).all()
+    user_name_line = get_query_in_table_by_line_and_value(User,
+                                                          User.unique_user_id, 
+                                                          user_id).all()
     print(user_name_line)
     if user_name_line != []:
-        data = VPN_config.query.filter(VPN_config.user_id == user_id).all()
+        data = get_query_in_table_by_line_and_value(VPN_config,
+                                                    VPN_config.user_id,
+                                                    user_id).all()
         response = create_json_response_user_id_client_config(user_id, data)
     else:
         response = {
