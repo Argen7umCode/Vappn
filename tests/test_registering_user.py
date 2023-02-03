@@ -12,7 +12,7 @@ from app import db, app
 from app.models import User
 
 
-url = r'http://127.0.0.1:5000/vappn/register'
+url = r'http://127.0.0.1:5000/vappn/register_user'
 
 def get_random_str(length):
     return ''.join(str(random.randint(0, 9)) for i in range(length))

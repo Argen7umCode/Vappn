@@ -32,7 +32,7 @@ def test_succses_regiser_config():
                 "username" : get_random_str(10),
                 "unique_user_id" : randint(5)
             }
-        res = requests.post('http://127.0.0.1:5000/vappn/register', json=user)
+        res = requests.post('http://127.0.0.1:5000/vappn/register_user', json=user)
 
         for i in range(2):
             body = {
@@ -56,7 +56,7 @@ def test_client_already_exists():
                 "username" : get_random_str(2),
                 "unique_user_id" : randint(5)
             }
-        res = requests.post('http://127.0.0.1:5000/vappn/register', json=user)
+        res = requests.post('http://127.0.0.1:5000/vappn/register_user', json=user)
 
         for i in range(2):
             body = {

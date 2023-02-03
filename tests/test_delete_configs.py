@@ -32,7 +32,7 @@ def test_succsess_deleting_config():
                 "username" : get_random_str(10),
                 "unique_user_id" : randint(5)
             }
-        res = requests.post('http://127.0.0.1:5000/vappn/register', json=user)
+        res = requests.post('http://127.0.0.1:5000/vappn/register_user', json=user)
 
         for i in range(2):
             config = {
@@ -59,7 +59,7 @@ def test_client_not_found_deleting_config():
                 "username" : get_random_str(10),
                 "unique_user_id" : randint(5)
             }
-        res = requests.post('http://127.0.0.1:5000/vappn/register', json=user)
+        res = requests.post('http://127.0.0.1:5000/vappn/register_user', json=user)
 
         for i in range(2):
             config = {

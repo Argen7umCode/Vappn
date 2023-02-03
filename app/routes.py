@@ -3,9 +3,22 @@ from app.models import User, VPN_config
 from flask import request, jsonify
 from sqlalchemy.exc import IntegrityError
 from pprint import pprint as print
+from utils.json_to_get_client_confs import create_json_response_user_id_client_config
 
-@app.route('/vappn/register', methods=['POST'])
-def register():
+
+def get_query_in_table_by_line_and_value(table, line, value):
+    return table.query.filter(line == value)
+
+
+def get_user_info_dy_userline(userline):
+    return {
+        'username' : userline.username,
+        'unique_user_id' : userline.unique_user_id
+    }
+
+
+@app.route('/vappn/register_user', methods=['POST'])
+def register_user():
     """
         username - username пользователя, который является владельцем конфигурации
         unique_user_id - его уникальный идентификатор   
@@ -19,10 +32,61 @@ def register():
         return jsonify({'Response' : 'User already exists'})
     else:
         return jsonify({'Response' : 'Succsess'})
-    
 
-def get_query_in_table_by_line_and_value(table, line, value):
-    return table.query.filter(line == value)
+
+@app.route('/vappn/get_user', methods=['GET'])
+def get_user():
+    params = request.json
+    user_id = params.get('user_id')
+    if user_id is None:
+        userinfo = [get_user_info_dy_userline(userline) for userline in User.query.all()]
+        if userinfo == []:
+            userinfo = 'Users table is'
+    else:
+        userline = get_query_in_table_by_line_and_value(User, User.unique_user_id, user_id).one()
+        userinfo = get_user_info_dy_userline(userline)
+    return userinfo
+
+
+@app.route('/vappn/delete_user', methods=['DELETE'])
+def delete_user_by_unique_id():
+    params = request.json
+    user_id = params.get('user_id')
+
+    user_name_line = get_query_in_table_by_line_and_value(User,
+                                                        User.unique_user_id, 
+                                                        user_id)
+
+    if user_name_line.all() != []:
+        client_configs_by_user_id = get_query_in_table_by_line_and_value(VPN_config,
+                                                    VPN_config.user_id,
+                                                    user_id).all()
+
+        print(client_configs_by_user_id)
+        if client_configs_by_user_id != []:
+            manager.create_connection()
+
+            deleting_result = {}
+            for line in client_configs_by_user_id:
+                client_config = line.client_name 
+                deleting_result[client_config] = manager.remove_client(client_config) 
+
+                db.session.delete(line)
+                db.session.commit()
+        else:
+            deleting_result = 'Empty user'
+
+        db.session.delete(user_name_line.one())
+        db.session.commit()
+
+        response = deleting_result
+    else:
+        response = 'User not found'
+    
+    return {
+            'user_id' : user_id, 
+            'response': response
+    }
 
 
 @app.route('/vappn/create_client_config', methods=['POST'])
@@ -44,7 +108,6 @@ def register_config():
                                                     User.unique_user_id, 
                                                     unique_user_id
                                                 ).first()
-
 
     # Делается запрос в базу данных, если пользователь существует, то выполняется тело условия
     if get_query_in_table_by_line_and_value(VPN_config,
@@ -101,13 +164,6 @@ def delete_config():
         'response' : response
     }
 
-def create_json_response_user_id_client_config(user_id, data):
-    return {
-        user_id : [{
-            'client_name' : line.client_name,
-            'config' : line.config
-        } for line in data] 
-    }
 
 @app.route('/vappn/get_client_configs', methods=['GET'])
 def get_config():
@@ -120,7 +176,7 @@ def get_config():
     user_name_line = get_query_in_table_by_line_and_value(User,
                                                           User.unique_user_id, 
                                                           user_id).all()
-    print(user_name_line)
+
     if user_name_line != []:
         data = get_query_in_table_by_line_and_value(VPN_config,
                                                     VPN_config.user_id,
@@ -132,3 +188,5 @@ def get_config():
         }
 
     return response
+
+
