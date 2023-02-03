@@ -50,10 +50,9 @@ def register_config():
     if get_query_in_table_by_line_and_value(VPN_config,
                                             VPN_config.client_name, 
                                             client_name).all() == []:
-        if user_line is not None or user_line != "":
+        if user_line is not None:
             # Делается запрос на сервер с VPN создается конфига
             response = manager.register_new_client_and_get_config(client_name)
-            print(response)
             # Если клиент есть, то выполняется запрос на сохраниение конфига в базе данных,
             # иначе возвращается ошибка 
             if response is not None and response != '':
@@ -99,7 +98,7 @@ def delete_config():
 
     return {
         'client_name' : client_name, 
-        'config' : response
+        'response' : response
     }
 
 def create_json_response_user_id_client_config(user_id, data):

@@ -6,4 +6,4 @@ def get_random_str(length):
    return ''.join(random.choice(letters) for i in range(length))
 
 def randint(lenght):
-   return random.randint(10^lenght, 10^(lenght+1)-1)
+   return random.randint(10**lenght, 10**(lenght+1)-1)
