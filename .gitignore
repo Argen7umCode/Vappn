@@ -1,5 +1,1 @@
-env/
-environ_var.py
-*/__pycache__/
-__pycache__/
-.env
+frontend/env/
