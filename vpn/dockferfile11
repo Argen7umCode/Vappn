@@ -1,0 +1,11 @@
+FROM ubuntu:latest
+
+RUN apt-get update
+
+WORKDIR /vpn
+
+COPY . . 
+
+RUN bash pivpn/auto_install/install.sh --unattended options.conf
+
+CMD ["bash"]
