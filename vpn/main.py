@@ -1,29 +1,22 @@
 from fastapi import FastAPI
+from vpn_manager import VPNmanager
+
 
 app = FastAPI()
+manager = VPNmanager()
 
 
-@app.post('/users/{user_id}')
-def create_user():
+@app.post('users/configs/{name}')
+async def create_config(name):
+    config = manager.make_and_get_config(name)
+    return config
+
+@app.delete('users/configs')
+async def delete_config():
     pass
 
-@app.delete('/users/{user_id}')
-def delete_user():
-    pass
-
-@app.get('/users/{user_id}')
-def get_user():
-    pass
-
-
-
-def create_config():
-    pass
-
-def delete_config():
-    pass
-
-def get_config():
+@app.get('users/configs')
+async def get_config():
     pass 
 
 

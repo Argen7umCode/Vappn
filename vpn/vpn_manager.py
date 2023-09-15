@@ -1,5 +1,6 @@
+import os
 import subprocess
-
+from pprint import pprint
 
 class VPNConfig:
     def __init__(self, pubkey, privkey, name) -> None:
@@ -8,12 +9,18 @@ class VPNConfig:
         self.name = name
 
     def __str__(self) -> str:
-        return f'''[Interface]\nAddress = 10.9.0.1/24\nPrivateKey = {self.privkey}
-[Peer]\nPublicKey = {self.pubkey}\nAllowedIPs = 10.9.0.2/32'''
+        conf_str = \
+        f'[Interface]\n' + \
+        'Address = 10.9.0.1/24\n' + \
+        f'PrivateKey = {self.privkey}' + \
+        '[Peer]\n' + \
+        f'PublicKey = {self.pubkey}' + \
+        'AllowedIPs = 10.9.0.2/32'
+        return conf_str
 
     def save(self):
         with open(f'{self.name}.conf', 'w') as file:
-            file.write(self)
+            file.write(str(self))
 
 
 class BashExecutor:
@@ -21,18 +28,19 @@ class BashExecutor:
         pass
 
     def execute(self, command):
-        subprocess.run(command)
+        return subprocess.run(command, stdout=subprocess.PIPE, text=True)
 
 
-class VPN_manager(BashExecutor):
+class VPNmanager(BashExecutor):
     def __init__(self):
         pass
 
     def __get_privkey(self):
-        return self.execute(['wg', 'genkey'])
+        key = self.execute(['bash', 'private_key.sh']).stdout
+        return key
     
     def __get_pubkey(self, privkey):
-        return self.execute(['echo', privkey, '|', 'wg', 'genkey'])
+        return self.execute(['bash', 'public_key.sh', f'{privkey}']).stdout
 
     def __get_priv_pub_keys(self):
         privkey = self.__get_privkey()
@@ -49,9 +57,8 @@ class VPN_manager(BashExecutor):
         server_privkey, _, _, client_pubkey = self.__get_config_keys()
         config = VPNConfig(server_privkey, client_pubkey, config_name)
         config.save()
-        return VPNConfig(server_privkey, client_pubkey)
+        return config
 
     def delete_config(self, Config):
-        
+        pass
 
-manager = VPN_manager()
